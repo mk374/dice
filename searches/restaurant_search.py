@@ -2,12 +2,19 @@
 import requests
 import pandas as pd
 import csv
+import heapq
+import numpy as np
+import os
+import json
 
 #Use your own api key. Try this one if it works. Make ur own
 #(For yelp)
 MY_API_KEY = "7rf6Fpz0BsOaifSmpsgxwA1azkflcYnz2YbcI3RHXtTs2Ab0EvViRcVj8UFVanDEFkkDf0H2fBPl5PRsOwvJdx9wi2OqpnDiC1KkwDO_572clGZ-6L9R-yTaJVMlXXYx"
 MY_BING_KEY = "ArcDM9D1dZ9pntV9ayBgz2JgBwLQxNY8AcXxPeSNIUNMuO4y77jUK-712M45INFM"
 MY_GOOGLE_KEY = "AIzaSyDSVFuDlz9JLb96aXDjwoF586t6N32oILk"
+
+#General standards
+num_of_restaurant_matches = 20
 
 #for now, just restaurants. defaults to businesses/restuarants
 business_url = 'https://api.yelp.com/v3/businesses/search'
@@ -41,6 +48,7 @@ bic_distance = 13 #also includes some scooters or skateboard (electric)
 def getRestaurantDistanceMatrix(location, SEARCH_LIMIT=10):
     restaurant_params = {
             'location': location.replace(' ', '+'),
+            'categories': 'restaurants',
             'limit': SEARCH_LIMIT
     }
 
@@ -72,15 +80,57 @@ def getRestaurantDistanceMatrix(location, SEARCH_LIMIT=10):
     for ele in google_response.json()['rows']:
         row = []
         for dis in ele['elements']:
-            row.append(dis['duration']['text'])
+            row.append((dis['duration']['value'], dis['duration']['text']))
         matrix.append(row)
 
-    
-    
     return (names, distance_params['origins'],matrix)
-names, origins, matrix = getRestaurantDistanceMatrix(location)
 
-download_dir = "example.csv"
-csv = open(download_dir, "w")
+def rankRestaurantsByDistance(names, matrix):
+    ranked = []
+    for row in range(len(matrix)):
+        for col in range(row, len(names)):
+            if row == col:
+                continue
+            else:
+                #(value of distance, text distance, origin, destination)
+                ranked.append((matrix[row][col][0], matrix[row][col][1], names[row], names[col]))
+    ranked = sorted(ranked, key=lambda x: x[0])
+    return ranked
+    
+    
+def saveFile(location, ranked):
+    os.chdir('..')
+    download_file_name = "json/restuarantsJson.json"
+
+    with open(download_file_name, 'w') as json_file:
+        data = json.load(json_file)
+        if location not in data:
+            print('Creating new restaurants matrix in {}'.format(location))
+            newRanked = {}
+            newRanked[location] = []
+            for i in range(num_of_restaurant_matches):
+                newRanked.append(ranked[i])
+        else:
+            print("Updating the location")
+        # json.dump(ranked, json_file)
+    
+# with open('data.json', 'r+') as f:
+#     data = json.load(f)
+#     data['id'] = 134 # <--- add `id` value.
+#     f.seek(0)        # <--- should reset file position to the beginning.
+#     json.dump(data, f, indent=4)
+#     f.truncate()     # remove remaining part
 
 
+
+names, coordinates, matrix = getRestaurantDistanceMatrix(location)
+ranked = rankRestaurantsByDistance(names, matrix)
+os.chdir('..')
+with open('json/restaurantsJson.json', 'w') as json_file:
+    try:
+        data = json.load(json_file)
+        if not data:
+            print("hello")
+    except:
+        print('hello')
+# saveFile (ranked)
