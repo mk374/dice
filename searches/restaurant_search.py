@@ -11,7 +11,6 @@ import json
 #(For yelp)
 MY_API_KEY = "7rf6Fpz0BsOaifSmpsgxwA1azkflcYnz2YbcI3RHXtTs2Ab0EvViRcVj8UFVanDEFkkDf0H2fBPl5PRsOwvJdx9wi2OqpnDiC1KkwDO_572clGZ-6L9R-yTaJVMlXXYx"
 MY_BING_KEY = "ArcDM9D1dZ9pntV9ayBgz2JgBwLQxNY8AcXxPeSNIUNMuO4y77jUK-712M45INFM"
-MY_GOOGLE_KEY = "AIzaSyDSVFuDlz9JLb96aXDjwoF586t6N32oILk"
 
 #General standards
 num_of_restaurant_matches = 20
